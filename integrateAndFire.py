@@ -263,4 +263,3 @@ def waitingTimes(tlist):
         return T[1:] - T[:-1]
     else:
         return np.nan    
-

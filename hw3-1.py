@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from integrateAndFire import ifNeuron, ifNetwork, waitingTimes
+from twoNet import twoNet
 
 def fa(**kwargs):
     '''Create a figure with a single axis. kwargs are passed to figure().'''
@@ -17,21 +18,22 @@ def part1A(tmax=1000):
     current, I, and outward (leak) current. Or perhaps I have my directions
     confused.
     '''
-    
-    d = ifNeuron(I=0.290)
-    a = ifNeuron(I=0.300)
-    b = ifNeuron(I=0.301)
-    c = ifNeuron(I=0.305)
+    I = 0.290
+    d = ifNeuron(I=I, label=r"$I=%.3f$" % I)
+    I = 0.300
+    a = ifNeuron(I=I, label=r"$I=%.3f$" % I)
+    I = 0.301
+    b = ifNeuron(I=I, label=r"$I=%.3f$" % I)
+    I = 0.305
+    c = ifNeuron(I=I, label=r"$I=%.3f$" % I)
     for n in d, a, b, c:
         n.integrate(tmax)
         for i in range(len(n.Vhist)):
             if n.Vhist[i] > n.Vthresh:
                 n.Vhist[i] = 10
-    fig, ax = showStateHistories([d, a, b, c], showg=False) 
-    ax.set_title(r'Part A: Bifurcation in integrate-and-fire neurons with default parameters')
+    fig, ax = showStateHistories([d, a, b, c], showg=False)
     ax.legend(loc="best")
-    if save:
-        save(fig, '501a-hw3-part1A', enum=False)
+    save(fig, '501a-hw3-part1A', enum=False, verbose=True)
         
         
 def part1B():
@@ -72,12 +74,13 @@ def part1B():
     ax.legend(loc='best')
     ax.set_ylabel(r'spiking frequency $[\mathrm{Hz}]$')
     ax.set_xlabel(r'applied current $[\mathrm{nA}]$')
+    save(fig, "part1B", enum=False, verbose=True)
 
 
-def part1C():
+def part1C_ramp():
     Irands = [4, 8, 10, 0, 1.0, 2.0]
-    import kevrekidis as kv
-    fig, A = kv.fa(numAxes=len(Irands), bestShape=True, figsize=(11,8.5))
+    fig = plt.figure(figsize=(11,8.5))
+    A = [fig.add_subplot(2, 3, i+1) for i in range(6)]
     for i, Irand in enumerate(Irands):
         ax = A[i]
         n = ifNeuron(dt=0.1)
@@ -107,8 +110,8 @@ def part1C():
         delayTimes = np.array(n.spikeTimes[1:])
         currents = Ioft(delayTimes)
         
-        ax.scatter(currents, 1 / spikeDelays * 1000,
-                   label='simulated')
+        ax.scatter(currents, 1 / spikeDelays * 1000, label='simulated')
+        
         def f(I):
             tcurve = -n.C/n.gLeak * np.log(1 - n.gLeak/I * (n.Vthresh - n.Vleak))
             return 1 / (n.tref + tcurve)
@@ -127,29 +130,7 @@ def part1C():
             ax.set_yticklabels([])
             ax.set_xticklabels([])
             
-        save(fig, 'part1C')
-
-
-def twoNet(IDC1, IDC2, Irand, tmax=500, synInc=0.2):
-
-    def functor_In(IDCn):
-        def In():
-            if Irand != 0:
-                return np.random.normal(loc=IDCn, scale=Irand)
-            else:
-                return IDCn
-        return In
-    I1 = functor_In(IDC1)
-    I2 = functor_In(IDC2)
-    
-    n1 = ifNeuron(I=I1, label=r"$n_1$", synInc=synInc)
-    n2 = ifNeuron(I=I2, label=r"$n_2$", synInc=synInc)
-    n1.addInhibitor(n2)
-    n2.addInhibitor(n1)
-    
-    net = ifNetwork([n1, n2])
-    net.integrate(tmax)
-    return net
+        save(fig, 'part1C_ramp', enum=False)
 
 
 def part2_timeCourse(Irand=6, tmax=200, IDC2=1):
@@ -227,16 +208,23 @@ def part2_ratioShow(fname):
     IDC2max = data['IDC2max']
 
     for c, s in zip(curRats_, spiRats_):
-        ax.plot(c, s, color=(0,0,0,.1)) # black; 10% opacity
+        ax.plot(c, s, color=(0,0,0,.01)) # black; 1% opacity
     # average across four trials
     curRats = np.mean(curRats, axis=0)
+    window_len = 32
+    curRats = smooth(curRats, window_len=window_len)
     spiRats = np.mean(spiRats, axis=0)
+    spiRats = smooth(spiRats, window_len=window_len)
     
     ax.set_xlim((IDC1, IDC2max))
     ax.plot(curRats, spiRats, color="black")
     ax.set_ylabel(r"$nSpikes_2:nSpikes_1$")
     ax.set_xlabel(r"$I_\mathrm{DC2}:I_\mathrm{DC1}$")
-#     ax.set_yscale('log')
+    print curRats.shape
+    print curRats[::window_len].shape
+#     for x in curRats[::window_len]:
+#         ax.axvline(x=x)
+    ax.set_xscale('log')
     save(fig, fname, verbose=True, enum=False)
 
 
@@ -257,7 +245,8 @@ def part3():
     
     net.integrate(tmax=2000)
     
-    showStateHistories([n1, n2])
+    fig, axes = showStateHistories([n1, n2])
+    save(fig, 'part3', enum=False, verbose=True)
     
     
 def showStateHistories(listOfNeurons, showg=True):
@@ -302,20 +291,39 @@ def save(fig, filename, enum=True, ext=".pdf", verbose=False):
     if verbose:
         print "saving", filename
     fig.savefig(filename)
+
+
+def smooth(x,window_len=11,window='hanning'):
+        if x.ndim != 1:
+                raise ValueError, "smooth only accepts 1 dimension arrays."
+        if x.size < window_len:
+                raise ValueError, "Input vector needs to be bigger than window size."
+        if window_len<3:
+                return x
+        if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+                raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+        s=np.r_[2*x[0]-x[window_len-1::-1],x,2*x[-1]-x[-1:-window_len:-1]]
+        if window == 'flat': #moving average
+                w=numpy.ones(window_len,'d')
+        else:  
+                w=eval('np.'+window+'(window_len)')
+        y=np.convolve(w/w.sum(),s,mode='same')
+        return y[window_len:-window_len+1]    
     
     
 if __name__ == "__main__":
-    part1A()
-    part1B()
-    part1C()
-    part2_timeCourse(Irand=0.0, tmax=400)
-    part2_timeCourse(Irand=0.8, tmax=400)
-    part2_timeCourse(Irand=3.0, tmax=400)
+#     part1A()
+#     part1B()
+#     part1C_ramp()
+#     part2_timeCourse(Irand=0.0, tmax=400)
+#     part2_timeCourse(Irand=0.8, tmax=400)
+#     part2_timeCourse(Irand=3.0, tmax=400)
     
 #     fname = part2_ratioData(ntrials=2, IDC2max=2.0, dI=0.25)
-#     fname = part2_ratioData(ntrials=20, IDC2max=12.0, dI=0.1)
-    fname = "driveRatios-tri20-IDC11.000000-IDC2max12.000000-dI0.100000.npz"
-    part2_ratioShow(fname)
+#     fname = part2_ratioData(ntrials=44, IDC2max=24.0, dI=0.025)
+#     fname = "driveRatios-tri20-IDC11.000000-IDC2max12.000000-dI0.100000.npz"
+    fname = "driveRatios-tri_44-IDC1_1.0-IDC2max_24.0-dI_0.0-Irand_1.0.npz"
+#     part2_ratioShow(fname)
     part3()
 
     plt.show()
