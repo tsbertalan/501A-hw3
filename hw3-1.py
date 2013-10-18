@@ -249,23 +249,6 @@ def part3():
     net = twoNet(1, 1, 0, synInc=synInc, tmax=1000)
     n1, n2 = net.neurons
     
-#     # switch the two states! Think of this as a perturbation.
-#     v1 = n1.V
-#     v2 = n2.V
-#     n1.V = v2
-#     n2.V = v1
-#     
-#     g1 = n1.inhibWeights
-#     g2 = n2.inhibWeights
-#     n1.inhibWeights = g2
-#     n2.inhibWeights = g1
-
-#     # cause the lower-V neuron to (nearly) spike
-#     if n1.V < n2.V:
-#         n1.V = -51
-#     else:
-#         n2.V = -51
-    
     # cause the lower-g neuron to have ... a higher g.
     if n1.inhibWeights[0] < n2.inhibWeights[0]:
         n1.inhibWeights[0] = 0.7
