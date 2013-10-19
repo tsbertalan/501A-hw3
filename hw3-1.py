@@ -312,18 +312,18 @@ def smooth(x,window_len=11,window='hanning'):
     
     
 if __name__ == "__main__":
-#     part1A()
-#     part1B()
-#     part1C_ramp()
-#     part2_timeCourse(Irand=0.0, tmax=400)
-#     part2_timeCourse(Irand=0.8, tmax=400)
-#     part2_timeCourse(Irand=3.0, tmax=400)
+    part1A()
+    part1B()
+    part1C_ramp()
+    part2_timeCourse(Irand=0.0, tmax=400)
+    part2_timeCourse(Irand=0.8, tmax=400)
+    part2_timeCourse(Irand=3.0, tmax=400)
     
 #     fname = part2_ratioData(ntrials=2, IDC2max=2.0, dI=0.25)
 #     fname = part2_ratioData(ntrials=44, IDC2max=24.0, dI=0.025)
 #     fname = "driveRatios-tri20-IDC11.000000-IDC2max12.000000-dI0.100000.npz"
     fname = "driveRatios-tri_44-IDC1_1.0-IDC2max_24.0-dI_0.0-Irand_1.0.npz"
-#     part2_ratioShow(fname)
+    part2_ratioShow(fname)
     part3()
 
     plt.show()
