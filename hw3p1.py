@@ -33,7 +33,7 @@ def part1A(tmax=1000):
                 n.Vhist[i] = 10
     fig, ax = showStateHistories([d, a, b, c], showg=False)
     ax.legend(loc="best")
-    save(fig, '501a-hw3-part1A', enum=False, verbose=True)
+    save(fig, '501a-hw3-part1A', enum=False)
         
         
 def part1B():
@@ -74,7 +74,7 @@ def part1B():
     ax.legend(loc='best')
     ax.set_ylabel(r'spiking frequency $[\mathrm{Hz}]$')
     ax.set_xlabel(r'applied current $[\mathrm{nA}]$')
-    save(fig, "part1B", enum=False, verbose=True)
+    save(fig, "part1B")
 
 
 def part1C_ramp():
@@ -149,7 +149,7 @@ def part2_timeCourse(Irand=6, tmax=200, IDC2=1):
                  + "n2: %d spikes" % len(n2.spikeTimes) + '\n'
                  + r"$I_\mathrm{rand}=%.2f$" % Irand)
     fig.subplots_adjust(top=0.9)
-    save(fig, "part2_timecourse-Irand%.2f" % Irand, enum=False, verbose=True)
+    save(fig, "part2_timecourse-Irand%.2f" % Irand)
     
 
 def part2_ratioData(ntrials=20, IDC1=1.0, IDC2max=12.0, dI=.1, Irand=1.0):
@@ -246,7 +246,7 @@ def part3():
     net.integrate(tmax=2000)
     
     fig, axes = showStateHistories([n1, n2])
-    save(fig, 'part3', enum=False, verbose=True)
+    save(fig, 'part3')
     
     
 def showStateHistories(listOfNeurons, showg=True):
@@ -283,7 +283,7 @@ def showStateHistories(listOfNeurons, showg=True):
         return fig, ax1
 
 
-def save(fig, filename, enum=True, ext=".pdf", verbose=False):
+def save(fig, filename, enum=False, ext=".pdf", verbose=True):
     if enum:
         from time import time
         filename += "-%d" % time()

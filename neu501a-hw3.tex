@@ -23,102 +23,13 @@
 \maketitle
 
 \section{Binocular Rivalry}
-Code is in \S\ref{sec:serviceCode}.
-
-
-\subsection{Single I/F Neuron}
-
-\subsubsection{Spiking Threshold}
-See \texttt{part1A} in \S\ref{sec:hw3-1.py}.
- 
-For plotting purposes, voltages above $V_\mathrm{thresh}=-50\,[mV]$ are here replaced
-with sudden $+10\,[mV]$ spikes. Bifurcation to a spiking regime occurs at $I=0.3\,[nA]$.
-
-\ig{501a-hw3-part1A}
-
-\subsubsection{Ramped Input Current}
-\begin{multicols}{2}
-See \texttt{part1B} in \S\ref{sec:hw3-1.py}.
-
-$$C\frac{dV}{dt} = I - g_L(V(t) - V_l)$$
-
-Solution:
-$$ V(t) = c_1 e^{-g_lt/C} + I/g + V_l $$
-
-Let $V(t=0) = V_l$, so $c_1=-I/g$.
-$$V(t) = I(1 - e^{-g_lt/C}) / g + V_l$$
-
-Solve for $t$:
-$$t(V) = -c/g \ln{\left(1-\frac{g_l}{I}(V(t) - V_l)\right)}$$
-
-So, the expected frequency is
-$$f = 1 / [t_\mathrm{ref} + t(V_\mathrm{thresh})]
-    = 1 / \left[t_\mathrm{ref} - C/g_l \ln{\left(1 - g/I(V_\mathrm{thr} - V_l)\right)}\right]$$
-Where $t_\mathrm{ref}$ is the refractory time of the neuron.
-
-\ig{part1B}
-
-\end{multicols}
-
-\newpage
-\subsubsection{Gaussian-Random Input Current}
-See \texttt{part1C\_ramp} in \S\ref{sec:hw3-1.py}.
-
-The average shape of the $f/I$ curve doesn't seem to be affected, although a
-spread is imposed.
-
-\includegraphics[width=\textwidth]{{{part1C}}}
-
-\hl{I still need to look at the effect on inter-spike times with constant $I$ and
-varying $I_\mathrm{rand}$.
-I'll add this non-ramping version on Saturday. But it should just be a slice of the
-ramping version.
-}
-
-\newpage
-\subsection{Two-I/F-Neuron Network}
-See \S\ref{sec:twoNet.py} for the code to generate the basic two-neuron network.
-
-Averaged across 20 trials the ratio of neuron one's frequency to neuron two's
-frequency appears to be a smooth function of their ratio of input currents.
-
-With no noise ($I_\mathrm{rand}=0$), the an unstable limit cycle is revealed
-in which the two neurons oscillate in synchrony. However, the smallest amount  
-of noise ($I_\mathrm{rand}=0.8$) breaks this symmetry, and the network appears
-to fall into a stable limit cycle of antisymmetric firing. This degenerates as
-$I_\mathrm{rand}$ is further increased.
-
-\begin{multicols}{2}
-
-\includegraphics[width=3in]{{{driveRatio-20runs}}}
-
-\includegraphics[width=3in]{{{part2_timecourse-Irand0.80}}}
-
-\includegraphics[width=3in]{{{part2_timecourse-Irand0.00}}}
-
-\includegraphics[width=3in]{{{part2_timecourse-Irand3.00}}}
-
-\end{multicols}
-
-\newpage
-\subsection{Poisson-random Synaptic Increments}
-With clean $1\,[nA]$ input currents to both neurons, but with synaptic increases
-per spike being $0.2 s(m)\,[mS/msec]$, where $s$ is Poisson-distributed
-with mean $m$, sufficiently large values of $m$ lead to bistability.
-
-Here, $m$ was set to $40$. At $t=1000\,[msec]$, The lower of the two
-synaptic conductances was abruptly increased to $0.7\,[\mu S]$ (analogous to a
-sudden synaptic increment), causing the system to switch into its other
-bistable state.
-\ig{part3}
-
-\hl{I should try uneven $I_\mathrm{DCi}$ (uneven saliency), and behavior
-as a function of $m$.}
+\input{problem1.tex}
 
 \newpage
 \section{Bistability in Attractor Spaces}
-\hl{For future release.}
+\input{problem2.tex}
 
+\newpage
 \section{Service Code}
 \label{sec:serviceCode}
 Code is also online at
@@ -132,7 +43,9 @@ Code is also online at
 \newpage
 \section{User Code}
 \label{sec:userCode}
-\code{hw3-1.py}
 
+\code{hw3p1.py}
+
+\code{hw3p2.py}
 
 \end{document}
