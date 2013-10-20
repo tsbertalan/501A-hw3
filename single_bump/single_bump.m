@@ -31,26 +31,6 @@
 % can keep the key pressed and move the mouse to produce a rapid sequence
 % of jolts.) Press 'q' to end the graphical simulation.
 %
-% OPTIONAL PARAMETERS:
-% --------------------
-%
-%  'dt'           0.1  by default. The timestep to use in the simulations
-%  'T'          10000  by default. The time at which the simulation stops
-%  'Ncells'       250  by default. Number of cells in the simulation
-%  'wE'           1.4  by default. Scales the strength of excitatory connections
-%  'sigmaE'         4  by default. Width of excitatory connections neighborhood
-%  'gI'           0.4  by default. Scales the global inhibition: from every cell to every cell
-%  'global_drive' 2.1  by default. Magnitude of external constant drive to every cell
-%  'sigma_noise'  0.4  by default. Scales magnitude of noise added to each cell
-%  'leak_noise'    0   by default. Static randomness, across cells, in their leak membrane conductance
-%  'wD'            0   by default. Strength of external gaussian-shaped sensory drive
-%  'sigmaD'        4   by default. Width of external gaussian sensory drive
-%  'muD'          0.5  by default. This is multiplied by Ncells to obtain
-%                                  the midpoint of the initial external drive position.
-%  'dV'            0   by default. Drive speed, in neuron positions per unit time.
-%  'initialU'    zeros(Ncells,1) by default. A vector that represents initial conditions for u.
-%  'do_plot'       1   by default. If this is 0, no figure or plot is generated (code runs much faster).
-%
 % RETURNS:
 % --------
 %
@@ -87,14 +67,19 @@ pairs = { ...
    'sigma_noise'  0.4   ; ...  % magnitude of noise in each cell
    'leak_noise'    0    ; ...  % Static randomness, across cells, in their "leak membrane conductance"
    'wD'            0    ; ...  % Strength of external gaussian drive
+   'wDB'           0    ; ...  % Strength of external gaussian drive; B track
    'sigmaD'        4    ; ...  % External gaussian drive has same width as default exc conn width
    'muD'          0.5   ; ...  % Drive starts at midpoint of screen.
+   'muDB'          0.5  ; ...  % Drive B starts at midpoint of screen. ... permuted?
    'dV'            0    ; ...  % Drive speed, in neuron positions per unit time.
+   'dVB'           0    ; ...  % Drive speed, in neuron positions per unit time; track B
    'initialU'     []    ; ...  % Optional initial conditions for u
    'do_plot'       1    ; ...  % If this is 0, no figure or plot is generated (runs faster).
+   'B_order'       0    ; ... % permuation for field B
 }; parseargs(varargin, pairs);
 
-muD = muD*Ncells; %#ok<NODEF>
+muD = muD*Ncells;
+muDB = muDB*Ncells;
 
 leak = ones(Ncells,1) + leak_noise*randn(Ncells,1); leak(leak<0) = 0;  %#ok<NODEF>
 
@@ -109,29 +94,37 @@ end;
 
 %% Set up the figure
 if do_plot,
-   figure(1000); clf;
+   figure(1400); clf;
    pos = get(gcf, 'Position');
    % Make sure figure is of enough width, and tell it what fn to call if user
    % presses key:
-   set(gcf, 'Units', 'pixels', 'Position', [pos(1) pos(2) 750 300], ...
+   set(gcf, 'Units', 'pixels', 'Position', [pos(1) pos(2) 750 800], ...
       'KeyPressFcn', 'bump_keypress_callback');
    % Use the following line instead of prev one if you want two axes stacked
-   % on top of each other:
+   % on top of each other:400
    % set(gcf, 'Units', 'pixels', 'Position', [pos(1) pos(2) 750 600], ...
    %  'KeyPressFcn', 'bump_keypress_callback');
+   
+   f2 = figure(2800); clf;
+   figure(1400);
    drawnow;
    pos = get(gcf, 'Position');
    
    %% Set up the GUI controllable elements
-   sigma_noise_control = add_control('sigma_noise', sigma_noise, 0.05, 0.05, pos(3)-200, 20); %#ok<NODEF>
-   gI_control          = add_control('gI',          gI,          0.05, 0.05, pos(3)-200, 40); %#ok<NODEF>
-   wE_control          = add_control('wE',          wE,          0.05, 0.05, pos(3)-200, 60); %#ok<NODEF>
-   global_drive_control= add_control('global_drive',global_drive,0.25, 0.25, pos(3)-200, 100); %#ok<NODEF>
+   sigma_noise_control = add_control('sigma_noise', sigma_noise, 0.05, 0.05, pos(3)-200, 20);
+   gI_control          = add_control('gI',          gI,          0.05, 0.05, pos(3)-200, 40);
+   wE_control          = add_control('wE',          wE,          0.05, 0.05, pos(3)-200, 60);
+   global_drive_control= add_control('global_drive',global_drive,0.25, 0.25, pos(3)-200, 100);
    leak_noise_control  = add_control('leak_noise',  leak_noise,  0.05, 0.05, pos(3)-200, 140);
    
-   muD_control         = add_control('drive_position', muD,      0.05, 0.05, pos(3)-200, 180);
-   dV_control          = add_control('drive_speed',    dV,       0.05, 0.05, pos(3)-200, 200); %#ok<NODEF>
-   wD_control          = add_control('drive_strength', wD,       0.05, 0.05, pos(3)-200, 220); %#ok<NODEF>
+   muD_control         = add_control('drive_position', muD,      0.05, 0.05, pos(3)-200, 260);
+   dV_control          = add_control('drive_speed',    dV,       0.05, 0.05, pos(3)-200, 280);
+   wD_control          = add_control('drive_strength', wD,       0.05, 0.05, pos(3)-200, 300);
+
+   muDB_control         = add_control('drive_pos B', muDB,      0.05, 0.05, pos(3)-200, 180);
+   dVB_control          = add_control('drive_spd B',    dVB,     0.05, 0.05, pos(3)-200, 200);
+   wDB_control          = add_control('drive_str B', wDB,       0.05, 0.05, pos(3)-200, 220);
+   
 end;
 
 %%  Set up cells and connections between them
@@ -142,12 +135,21 @@ end;
 r = zeros(Ncells,1); 
 eWeights = zeros(Ncells, Ncells);  % excitatory weights
 
-% Set up weights in the first track:
+% Set up weights:
+if B_order==0
+    B_order = randperm(Ncells);
+end
+P = permMat(B_order);
+
 for i=1:Ncells,
   for j=1:Ncells,
     if i~=j,  % no self-connections
-      delta = abs(i-j);     
-      eWeights(i,j) = eWeights(i,j)+exp(-delta.^2/(2*sigmaE^2))/sigmaE;
+      deltaA = abs(i-j);
+      deltaB = abs(B_order(i) - B_order(j));
+      eWeights(i,j) = eWeights(i,j)+(...
+          exp(-deltaA.^2/(2*sigmaE^2)) + ...
+          exp(-deltaB.^2/(2*sigmaE^2)) ...
+          )/sigmaE;
     end;
   end;
 end;
@@ -155,18 +157,40 @@ end;
 
 %% Now to plotting and looping
 % set up plotting axes:
+if do_plot
+    figs = [figure(1400), figure(2800)];
+end
+orders = {1:Ncells, B_order};
+wDs = [wD, wDB];
+mus = [muD, muDB];
+handles1_ = [];
+handles2_ = [];
+axes1_ = [];
+axes2_ = [];
+titles = {'field A: ', 'field B: '};
 if do_plot,
-   ax1d = axes('Position', [0.1 0.15 0.6 0.1]); set(ax1d, 'Units', 'pixels');
-   external_drive = wD*exp(-((1:Ncells)'-muD).^2/(2*sigmaD.^2));
-   hd = plot(external_drive, 'k.-'); ylim([-0.5 0.5]);
-   xlabel('cell #');
-   
-   
-   ax1  = axes('Position', [0.1 0.3 0.6 0.6]); set(ax1, 'Units', 'pixels');
-   h1 = plot(r, '.-'); set(h1, 'Color', [0 0.5 0]); ylim([-0.05 1.05]); t1 = title(sprintf('t=%.2f', t));
-   ylabel('activity');
-end;
+    for i=1:2
+    order = orders{i};
+    w = wDs(i);
+    mu = mus(i);
+    
+       fig = figs(i);
+       figure(fig)
+       axes2_(i) = axes('Position', [0.1 0.15 0.6 0.1]); set(axes2_(i), 'Units', 'pixels');
+       external_drive = w*exp(-(order'-mu).^2/(2*sigmaD.^2));
+       handles2_(i) = plot(external_drive, 'k.-'); ylim([-0.5 0.5]);
+       xlabel('cell #');
 
+       axes1_(i)  = axes('Position', [0.1 0.3 0.6 0.6]); set(axes1_(i), 'Units', 'pixels');
+       handles1_(i) = plot(r, '.-'); set(handles1_(i), 'Color', [0 0.5 0]); ylim([-0.05 1.05]);
+       title(titles{i});
+       ylabel('activity');
+    end;
+end
+
+if do_plot
+    figure(1400);
+end
 
 
 % Loop forever -- or until user presses 'q'
@@ -175,27 +199,32 @@ while t<T,
   
   if do_plot,
      % The following line is to deal with reading keypresses-- no need to modify
-     c = get(1000, 'UserData'); if isempty(c), c = ''; end; set(1000, 'UserData', '');
-     % End reading keypress code
-  
-     % c will be either empty if no keypress, or will be the character pressed
-     switch c,
-        % 'p' = Positive Pulse;  'd' = Negative Pulse
-        case {'p' 'd'},
-           [xvalue0, yvalue] = get_pointer_location(ax1);  %#ok<NASGU> % this gets the x position of pointer in axes units
-           for xvalue = xvalue0-1:xvalue0+1,
-              if xvalue >=1 && xvalue <=Ncells, % There are no cells outside the axes
-                 switch c,
-                    case 'p', u(xvalue)=1;  % user asked for positive jolt
-                    case 'd', u(xvalue)=-1; % user asked for negative jolt
-                 end;
-              end;
-           end;
-           % 'q' = quit
-        case 'q',
-           break;  % if q, get out of the WHILE loop
-        otherwise,
-     end;
+     
+     % I have no idea what this 1000 handle is, and it's now broken so I'll
+     % comment it out. All these global variables and stateful plot handles
+     % are really bad form, and Mathworks should feel bad.
+     
+%      c = get(1000, 'UserData'); if isempty(c), c = ''; end; set(1000, 'UserData', '');
+%      % End reading keypress code
+%   
+%      % c will be either empty if no keypress, or will be the character pressed
+%      switch c,
+%         % 'p' = Positive Pulse;  'd' = Negative Pulse
+%         case {'p' 'd'},
+%            [xvalue0, yvalue] = get_pointer_location(ax1);  %#ok<NASGU> % this gets the x position of pointer in axes units
+%            for xvalue = xvalue0-1:xvalue0+1,
+%               if xvalue >=1 && xvalue <=Ncells, % There are no cells outside the axes
+%                  switch c,
+%                     case 'p', u(xvalue)=1;  % user asked for positive jolt
+%                     case 'd', u(xvalue)=-1; % user asked for negative jolt
+%                  end;
+%               end;
+%            end;
+%            % 'q' = quit
+%         case 'q',
+%            break;  % if q, get out of the WHILE loop
+%         otherwise,
+%      end;
 
      % Get the current GUI values of the following variables
      sigma_noise = get_control(sigma_noise_control);
@@ -204,6 +233,11 @@ while t<T,
      wD          = get_control(wD_control);
      dV          = get_control(dV_control);
      muD         = get_control(muD_control);
+
+     wDB         = get_control(wDB_control);
+     dVB         = get_control(dVB_control);
+     muDB        = get_control(muDB_control);
+     
      global_drive= get_control(global_drive_control);
      
      new_leak_noise = get_control(leak_noise_control);
@@ -215,32 +249,49 @@ while t<T,
   
   
   % ---- Dynamics of driving ---
-  muD = muD + dV*dt; 
+  muD = muD + dV*dt;
+  muDB = muDB + dVB*dt;
   if muD > Ncells-2*sigmaE, dV=-dV; if do_plot, set_control(dV_control, dV); end; end;
   if muD < 2*sigmaE,        dV=-dV; if do_plot, set_control(dV_control, dV); end; end;
+
+  if muDB > Ncells-2*sigmaE, dVB=-dVB; if do_plot, set_control(dVB_control, dVB); end; end;
+  if muDB < 2*sigmaE,        dVB=-dVB; if do_plot, set_control(dVB_control, dVB); end; end;
+  
   
   if do_plot, set_control(muD_control, muD); end;
-  external_drive = wD*exp(-((1:Ncells)'-muD).^2/(2*sigmaD.^2));  
+  if do_plot, set_control(muDB_control, muDB); end;
+  external_drive = wD*exp(-((1:Ncells)'-muD).^2/(2*sigmaD.^2)) + ...
+                   wDB*exp(-((B_order)'-muDB).^2/(2*sigmaD.^2));
+               
+  external_driveB = wD*exp(-((B_order)'-muD).^2/(2*sigmaD.^2)) + ...
+                   wDB*exp(-((1:Ncells)'-muDB).^2/(2*sigmaD.^2));
   % ---- End dynamics of driving ---
 
   
   % ---- Main dynamical equations ----
-  
   dudt = -leak.*u - gI*sum(r) + wE*eWeights*r - sigma_noise*randn(size(u))*sqrt(dt) + ...
-     global_drive + external_drive;
+         global_drive + external_drive;
   u    = u + dt*dudt;
   r    = 0.5+0.5*tanh((u-cell_thresh)/cell_sigma);
+  rB   = 0.5+0.5*tanh(((P*u)'-cell_thresh)/cell_sigma);
   t = t+dt;
   % ---- End main dynamical equations ----
   
   
   % replot
-  if do_plot,
-     set(h1, 'YData', r);           set(t1, 'String', sprintf('t=%.2f', t));
-     set(hd, 'YData', external_drive);
-     drawnow; 
-  end;
+  external_drives = {external_drive, external_driveB};
+  rs = {r, rB};
+  for i=1:2
+    if do_plot,
+        t1 = title(axes1_(i), strcat(...
+                   titles{i}, ...
+                   sprintf('t=%.2f', t) ...
+               ));
+        set(handles1_(i), 'YData', rs{i});
+        set(handles2_(i), 'YData', external_drives{i});
+        drawnow; 
+      end;
+  end
 end;  % and loop
 
 if nargout > 0, rr = r; end;
-
