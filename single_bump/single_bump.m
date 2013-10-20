@@ -66,12 +66,12 @@ pairs = { ...
    'global_drive' 2.1   ; ...  % an external constant drive to every cell
    'sigma_noise'  0.4   ; ...  % magnitude of noise in each cell
    'leak_noise'    0    ; ...  % Static randomness, across cells, in their "leak membrane conductance"
-   'wD'            0    ; ...  % Strength of external gaussian drive
+   'wDA'           0    ; ...  % Strength of external gaussian drive
    'wDB'           0    ; ...  % Strength of external gaussian drive; B track
    'sigmaD'        4    ; ...  % External gaussian drive has same width as default exc conn width
    'muD'          0.5   ; ...  % Drive starts at midpoint of screen.
    'muDB'          0.5  ; ...  % Drive B starts at midpoint of screen. ... permuted?
-   'dV'            0    ; ...  % Drive speed, in neuron positions per unit time.
+   'dVA'           0    ; ...  % Drive speed, in neuron positions per unit time.
    'dVB'           0    ; ...  % Drive speed, in neuron positions per unit time; track B
    'initialU'     []    ; ...  % Optional initial conditions for u
    'do_plot'       1    ; ...  % If this is 0, no figure or plot is generated (runs faster).
@@ -118,8 +118,8 @@ if do_plot,
    leak_noise_control  = add_control('leak_noise',  leak_noise,  0.05, 0.05, pos(3)-200, 140);
    
    muD_control         = add_control('drive_position', muD,      0.05, 0.05, pos(3)-200, 260);
-   dV_control          = add_control('drive_speed',    dV,       0.05, 0.05, pos(3)-200, 280);
-   wD_control          = add_control('drive_strength', wD,       0.05, 0.05, pos(3)-200, 300);
+   dV_control          = add_control('drive_speed',    dVA,       0.05, 0.05, pos(3)-200, 280);
+   wD_control          = add_control('drive_strength', wDA,       0.05, 0.05, pos(3)-200, 300);
 
    muDB_control         = add_control('drive_pos B', muDB,      0.05, 0.05, pos(3)-200, 180);
    dVB_control          = add_control('drive_spd B',    dVB,     0.05, 0.05, pos(3)-200, 200);
@@ -161,7 +161,7 @@ if do_plot
     figs = [figure(1400), figure(2800)];
 end
 orders = {1:Ncells, B_order};
-wDs = [wD, wDB];
+wDs = [wDA, wDB];
 mus = [muD, muDB];
 handles1_ = [];
 handles2_ = [];
@@ -230,8 +230,8 @@ while t<T,
      sigma_noise = get_control(sigma_noise_control);
      gI          = get_control(gI_control);
      wE          = get_control(wE_control);
-     wD          = get_control(wD_control);
-     dV          = get_control(dV_control);
+     wDA          = get_control(wD_control);
+     dVA          = get_control(dV_control);
      muD         = get_control(muD_control);
 
      wDB         = get_control(wDB_control);
@@ -249,10 +249,10 @@ while t<T,
   
   
   % ---- Dynamics of driving ---
-  muD = muD + dV*dt;
+  muD = muD + dVA*dt;
   muDB = muDB + dVB*dt;
-  if muD > Ncells-2*sigmaE, dV=-dV; if do_plot, set_control(dV_control, dV); end; end;
-  if muD < 2*sigmaE,        dV=-dV; if do_plot, set_control(dV_control, dV); end; end;
+  if muD > Ncells-2*sigmaE, dVA=-dVA; if do_plot, set_control(dV_control, dVA); end; end;
+  if muD < 2*sigmaE,        dVA=-dVA; if do_plot, set_control(dV_control, dVA); end; end;
 
   if muDB > Ncells-2*sigmaE, dVB=-dVB; if do_plot, set_control(dVB_control, dVB); end; end;
   if muDB < 2*sigmaE,        dVB=-dVB; if do_plot, set_control(dVB_control, dVB); end; end;
@@ -260,10 +260,10 @@ while t<T,
   
   if do_plot, set_control(muD_control, muD); end;
   if do_plot, set_control(muDB_control, muDB); end;
-  external_drive = wD*exp(-((1:Ncells)'-muD).^2/(2*sigmaD.^2)) + ...
+  external_drive = wDA*exp(-((1:Ncells)'-muD).^2/(2*sigmaD.^2)) + ...
                    wDB*exp(-((B_order)'-muDB).^2/(2*sigmaD.^2));
                
-  external_driveB = wD*exp(-((B_order)'-muD).^2/(2*sigmaD.^2)) + ...
+  external_driveB = wDA*exp(-((B_order)'-muD).^2/(2*sigmaD.^2)) + ...
                    wDB*exp(-((1:Ncells)'-muDB).^2/(2*sigmaD.^2));
   % ---- End dynamics of driving ---
 

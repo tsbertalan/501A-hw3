@@ -29,11 +29,8 @@ for i=1:1:numel(noises)
     movements = 1:1:numel(u0list);
     for j=1:1:numel(u0list)
         u0 = u0list(j);
-               
-        initialU = 4 * exp(-(indices - u0).^2 / ...
-            (2 * sigmaE.^2));
-
-
+        
+        initialU = makeBump(Ncells, u0, 4, sigmaE);
 
         [r, u] = single_bump('T', T, 'wD', wD, 'do_plot', 0, ...
                              'Ncells', Ncells, 'initialU', initialU, ...

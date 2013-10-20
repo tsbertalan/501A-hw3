@@ -3,7 +3,8 @@ function [ center ] = findCenter( rho_ )
     %   A weighted mean of indices. Provided as a float; round to get
     %   a corresponding index into the original data.
     lowest = min(rho_);
-    rho = rho_ - lowest;
+    N = numel(rho_);
+    rho = reshape(rho_ - lowest, N, 1);
     M = sum(rho);
     r = 1:1:numel(rho);
     center = sum(r * rho) / M;
