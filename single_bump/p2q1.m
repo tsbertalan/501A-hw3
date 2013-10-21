@@ -8,7 +8,7 @@ Ncells = 250;
 indices = 1:1:Ncells;
 sigma_noise = 0.4;
 
-dW = .01;
+dW = .1;
 wDlist = -.5:dW:.5;
 rMaxList = 1:1:numel(wDlist);
 
@@ -18,12 +18,14 @@ for s=[0, 1]
 
     for i=1:1:numel(wDlist) 
         disp(wDlist(i))
-        [r, u] = single_bump('T', 20, 'wD', wDlist(i), 'do_plot', 0, ...
+        [r, u] = single_bump('T', 20, 'wDA', wDlist(i), 'do_plot', 1, ...
                              'Ncells', Ncells, 'initialU', initialU, ...
-                             'sigma_noise', sigma_noise);
+                             'sigma_noise', sigma_noise, 'use_field_B', 0);
         rMaxList(i) = max(r);
     end
     plot(wDlist, rMaxList, char(styles(s+1)));
+    xlabel('w_D');
+    ylabel('max(r)');
 end
 legend({'without initial bump', 'with initial bump'});
-saveas(gcf(), 'initialbump.eps');
+saveas(gcf(), sprintf('initialbump-dW_%.2f.eps', dW));

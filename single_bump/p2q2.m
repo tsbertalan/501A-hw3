@@ -12,7 +12,7 @@ u0list = Ncells/2-width:.1:Ncells/2+width;
 wD = 0;
 sigmaE = 4;
 
-styles = {'--r', '-b'};
+styles = {'-k', '-k'};
 noises = [0   , .4];  % Dictionaries would be nice about now.
 f = figure('paperposition', [0, 0, 4.0, 3.0]);
 hold all;
@@ -32,7 +32,7 @@ for i=1:1:numel(noises)
         
         initialU = makeBump(Ncells, u0, 4, sigmaE);
 
-        [r, u] = single_bump('T', T, 'wD', wD, 'do_plot', 0, ...
+        [r, u] = single_bump('T', T, 'wDA', wD, 'do_plot', 0, 'use_field_B', 0,...
                              'Ncells', Ncells, 'initialU', initialU, ...
                              'sigma_noise', sigma_noise, 'sigmaE', sigmaE);
         uf = findCenter(u);
@@ -51,11 +51,14 @@ for i=1:1:numel(noises)
 
     end
     figure()
+    hold all;
     handles(i) = plot(u0list, movements, style);
     title(sprintf('\\sigma_\\eta=%.1f', sigma_noise))
-    saveas(gcf(), sprintf('movement-sn_%.2f.eps', sigma_noise), 'epsc');
     xlabel('u(0)')
     ylabel(sprintf('u(%d) - u(0)', T))
+    horiz(0, 'k')
+    
+    saveas(gcf(), sprintf('movement-sn_%.2f.eps', sigma_noise), 'epsc');
 end
 
 

@@ -39,8 +39,7 @@ class ifNeuron(object):
         Vinhibsyn=-75 : scalar
             [mV] Nernst potential for the inhibitory synaptic current
         label="" : string
-            a label describing this neuron
-        '''
+            a label describing this neuron'''
         self.Vleak = Vleak
         self.Vreset = Vreset
         self.dt = dt
@@ -92,8 +91,7 @@ class ifNeuron(object):
         Optional Arguments
         ==================
         g0=0.0 (float)
-            The initial synaptic conductance for this pair.
-        '''
+            The initial synaptic conductance for this pair.'''
         self.inhibitors.append(other)
         weights = list(self.inhibWeights)
         weights.append(g0)
@@ -108,13 +106,11 @@ class ifNeuron(object):
             return self.I_ 
     
     def saveNextState(self):
-        '''
-        We'll do Euler-integration for now.
+        '''We'll do Euler-integration for now.
         This does everything *except* updating the neuron's voltages and its
         vector of inhibitory connection weights. That way,
         neurons in a ifNetwork can get eachothers' last-step voltages for use in
-        their own calculations.
-        '''
+        their own calculations.'''
         V = self.V
         self.t += self.dt
         self.thist.append(self.t)
@@ -170,26 +166,21 @@ class ifNeuron(object):
         =========
         tmax (float)
             The time (in msec) at which point integration should stop, as an absolute
-            number, not a difference from the neuron's current saved time.
-        ''' 
+            number, not a difference from the neuron's current saved time.''' 
         while self.t < tmax:
             self.step()
     
     def _setV(self, V):
-        '''
-        Pre-allocating a numpy array for histories would be good,
+        '''Pre-allocating a numpy array for histories would be good,
         but then we'd have to keep track of our current index in that array,
         and we'd still have to extend it if we integrated past our expected
         maximum time. Still, this remains a potential source of speedup if
-        any is later needed.
-        '''
+        any is later needed.'''
         self.V = V
         self.Vhist.append(V)
         
     def _setG(self, inhibWeights):
-        """
-        inhibWeights is a vector of weights. Inhibitory only for now.
-        """
+        '''inhibWeights is a vector of weights. Inhibitory only for now.'''
         self.inhibWeights = inhibWeights
         self.Ghist.append(inhibWeights)
         
@@ -212,8 +203,9 @@ class ifNeuron(object):
 class ifNetwork(object):
     
     def __init__(self, neuronList):
-        '''
-        A simple container of several ifNeurons, to facilitate their integration.
+
+
+        '''A simple container of several ifNeurons, to facilitate their integration.
         
         Arguments
         =========
@@ -221,8 +213,7 @@ class ifNetwork(object):
             A list of neurons, which should already have called addInhibitor on
             eachother as appropriate.
             Note that the network's start time (before integration) will be taken
-            from the current time of the first neuron in the supplied list.
-        '''
+            from the current time of the first neuron in the supplied list.'''
         self.neurons = neuronList
         # Ensure that the neurons are integrated through this class rather
         #  than individually (which would be dumb):
@@ -248,8 +239,7 @@ class ifNetwork(object):
         =========
         tmax (float)
             The time (in msec) at which point integration should stop, as an absolute
-            number, not a difference from the network's current saved time.
-        '''
+            number, not a difference from the network's current saved time.'''
         while self.t < tmax:
             self.step()
             self.t = self.neurons[0].t
@@ -262,4 +252,6 @@ def waitingTimes(tlist):
         T = np.array(tlist)
         return T[1:] - T[:-1]
     else:
-        return np.nan    
+        return np.nan
+
+

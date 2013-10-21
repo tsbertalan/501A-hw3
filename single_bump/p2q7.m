@@ -14,5 +14,4 @@ wE = 0.8;
 [r, u] = single_bump('wDA', wDA, 'wDB', wDB, 'Ncells', Ncells,...
                      'dVA', dVA, 'dVB', dVB, 'gI', gI, 'wE', wE)
 
-
 end

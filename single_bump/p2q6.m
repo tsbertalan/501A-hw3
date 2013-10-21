@@ -15,7 +15,7 @@ movements = [];
 B_order = randperm(Ncells);
 
 for i=1:Ncells
-    u0 = u0s(i);
+    u0 = u0s(i)
     initialU = makeBump(Ncells, u0, 1, sigmaE);
     [r, u] = single_bump('initialU', initialU, 'T', T, 'Ncells', Ncells,...
                          'sigmaE', sigmaE, 'sigma_noise', sigma_noise,...

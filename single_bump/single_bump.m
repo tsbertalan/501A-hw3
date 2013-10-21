@@ -75,9 +75,13 @@ pairs = { ...
    'dVB'           0    ; ...  % Drive speed, in neuron positions per unit time; track B
    'initialU'     []    ; ...  % Optional initial conditions for u
    'do_plot'       1    ; ...  % If this is 0, no figure or plot is generated (runs faster).
-   'B_order'       0    ; ... % permuation for field B
+   'B_order'       0    ; ...  % permuation for field B
+   'use_field_B'   1   ; ...  % set to 0 to use only field A
 }; parseargs(varargin, pairs);
 
+if use_field_B
+    use_field_B = 1;
+end
 muD = muD*Ncells;
 muDB = muDB*Ncells;
 
@@ -148,7 +152,7 @@ for i=1:Ncells,
       deltaB = abs(B_order(i) - B_order(j));
       eWeights(i,j) = eWeights(i,j)+(...
           exp(-deltaA.^2/(2*sigmaE^2)) + ...
-          exp(-deltaB.^2/(2*sigmaE^2)) ...
+          exp(-deltaB.^2/(2*sigmaE^2)) * use_field_B...
           )/sigmaE;
     end;
   end;
@@ -261,19 +265,19 @@ while t<T,
   if do_plot, set_control(muD_control, muD); end;
   if do_plot, set_control(muDB_control, muDB); end;
   external_drive = wDA*exp(-((1:Ncells)'-muD).^2/(2*sigmaD.^2)) + ...
-                   wDB*exp(-((B_order)'-muDB).^2/(2*sigmaD.^2));
+                   wDB*exp(-((B_order)'-muDB).^2/(2*sigmaD.^2)) * use_field_B;
                
   external_driveB = wDA*exp(-((B_order)'-muD).^2/(2*sigmaD.^2)) + ...
-                   wDB*exp(-((1:Ncells)'-muDB).^2/(2*sigmaD.^2));
+                    wDB*exp(-((1:Ncells)'-muDB).^2/(2*sigmaD.^2)) * use_field_B;
   % ---- End dynamics of driving ---
 
   
   % ---- Main dynamical equations ----
   dudt = -leak.*u - gI*sum(r) + wE*eWeights*r - sigma_noise*randn(size(u))*sqrt(dt) + ...
-         global_drive + external_drive;
+         global_drive + external_drive + use_field_B * external_driveB;
   u    = u + dt*dudt;
   r    = 0.5+0.5*tanh((u-cell_thresh)/cell_sigma);
-  rB   = 0.5+0.5*tanh(((P*u)'-cell_thresh)/cell_sigma);
+  rB   = 0.5+0.5*tanh(((P*u)'-cell_thresh)/cell_sigma) * use_field_B;
   t = t+dt;
   % ---- End main dynamical equations ----
   

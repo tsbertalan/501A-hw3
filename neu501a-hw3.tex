@@ -1,18 +1,37 @@
 \documentclass[letterpaper,10pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[margin=1in]{geometry}
-\usepackage{graphicx, verbatim, hyperref, color, soul, multicol}
 
-\newcommand{\code}[1]{
+\usepackage[pdftex]{graphicx}
+\usepackage{graphicx, verbatim, hyperref, color, soul, multicol}
+\usepackage{epstopdf}
+\usepackage{minted}
+
+\newcommand{\code}[2]{
 \subsection{\texttt{#1}}
 \label{sec:#1}
-\texttt{\verbatiminput{#1}}
+% \texttt{
+% \verbatiminput{#1}
+% }
+\inputminted{#2}{#1}
 }
 
 \newcommand{\ig}[1]{
-\begin{center}
-    \includegraphics[width=3in]{{{#1}}}
-\end{center}
+% \begin{center}
+    \includegraphics[width=2.5in]{{{#1}}}
+% \end{center}
+}
+
+\renewcommand{\vec}[1]{\uline{#1}}
+\usepackage{ulem}
+\newcommand{\mat}[1]{
+\uuline{
+\mathrm{
+% \mathbf{
+#1
+% }
+}
+}
 }
 
 \title{NEU 501a -- HW3}
@@ -35,17 +54,37 @@
 Code is also online at
 \href{https://github.com/tsbertalan/501A-hw3}{github.com/tsbertalan/501A-hw3}.
 
-\code{integrateAndFire.py}
+\code{integrateAndFire.py}{python}
 
 \newpage
-\code{twoNet.py}
+\code{twoNet.py}{python}
+
+\code{findCenter.m}{matlab}
+\code{permMat.m}{matlab}
+\code{betaMeasure.m}{matlab}
 
 \newpage
 \section{User Code}
 \label{sec:userCode}
 
-\code{hw3p1.py}
+\code{hw3p1.py}{python}
 
-\code{hw3p2.py}
+\code{hw3p2.py}{python}
+
+\newpage
+\code{p2q1.m}{matlab}
+
+\newpage
+\code{p2q2.m}{matlab}
+
+\newpage
+\code{p2q5.m}{matlab}
+
+\newpage
+\code{p2q6.m}{matlab}
+
+\newpage
+\code{p2q7.m}{matlab}
+
 
 \end{document}

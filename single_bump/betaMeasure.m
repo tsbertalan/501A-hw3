@@ -20,8 +20,5 @@ function beta = betaMeasure(u, S)
     
     beta = 1 - (inMass / totMass);
     
-    % % Demo
-%     plot([centerInd, centerInd], [-1, 1], 'k')
-%     plot([centerInd-s, centerInd-s], [-1, 1], 'r')
-%     plot([centerInd+s, centerInd+s], [-1, 1], 'r')
+    
 end
